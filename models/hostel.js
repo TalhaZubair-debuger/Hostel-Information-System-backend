@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
 const hostelSchema = Schema({
     image: {
         type: String,
-        required: false
+        required: true
     },
     description: {
         type: String,
@@ -32,7 +32,7 @@ const hostelSchema = Schema({
         required: true
     },
     vacantBeds: {
-        type: String,
+        type: Number,
         required: true
     },
     facilities: {

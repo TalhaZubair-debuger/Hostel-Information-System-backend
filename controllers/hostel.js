@@ -7,14 +7,13 @@ const fs = require("fs");
 exports.addHostel = async (req, res, next) => {
 
     const errors = validationResult(req);
-    const image = req.file.filename;
-    console.log(image + "Line 10 Hostel Controller");
     if (!errors.isEmpty()) {
         const error = new Error("Validation Failed, data entered in wrong format.");
         error.statusCode = 422;
         throw error;
     }
 
+    const image = req.body.image;
     const description = req.body.description;
     const rent = req.body.rent;
     const roomSize = req.body.roomSize;
@@ -25,7 +24,7 @@ exports.addHostel = async (req, res, next) => {
     const facilities = req.body.facilities;
     const city = req.body.city;
     const university = req.body.university;
-    const owner = req.body.userId;//testing
+    const owner = req.userId;
 
     try {
         const hostel = new Hostel({
@@ -53,7 +52,7 @@ exports.addHostel = async (req, res, next) => {
 }
 
 exports.getOwnerHostels = async (req, res, next) => {
-    const owner = req.body.userId;//testing
+    const owner = req.userId;//production
 
     try {
         const hostels = await Hostel.find({ owner: owner });
@@ -62,19 +61,7 @@ exports.getOwnerHostels = async (req, res, next) => {
             error.statusCode = 404;
             throw error;
         }
-        let images = [];
-
-        hostels.map(hostel => {
-            console.log(hostel.image);
-            const imagePath = `public/images/${hostel.image}`;
-            if (fs.existsSync(imagePath)) {
-                const image = fs.readFileSync(imagePath);
-                const base64Image = Buffer.from(image).toString('base64');
-                images.push(base64Image);
-            }
-        })
-
-        res.status(201).json({ message: "Hostels found!", hostels: hostels, images })
+        res.status(201).json({ message: "Hostels found!", hostels: hostels })
     } catch (error) {
         if (!error.statusCode) {
             error.statusCode = 500;
@@ -84,7 +71,7 @@ exports.getOwnerHostels = async (req, res, next) => {
 }
 
 exports.getOwnerHostel = async (req, res, next) => {
-    const owner = req.body.userId;//testing
+    const owner = req.userId;//testing
     const hostelId = req.params.hostelId;
 
     try {
@@ -94,14 +81,7 @@ exports.getOwnerHostel = async (req, res, next) => {
             error.statusCode = 404;
             throw error;
         }
-        const imagePath = `public/images/${hostel.image}`;
-        let image;
-        if (fs.existsSync(imagePath)) {
-            const Image = fs.readFileSync(imagePath);
-            const base64Image = Buffer.from(Image).toString('base64');
-            image = base64Image;
-        }
-        res.status(201).json({ message: "Hostels found!", hostel: hostel, image: image })
+        res.status(201).json({ message: "Hostel found!", hostel: hostel })
     } catch (error) {
 
     }
@@ -207,7 +187,6 @@ exports.getAllHostels = async (req, res, next) => {
         let images = [];
 
         hostels.map(hostel => {
-            console.log(hostel.image);
             const imagePath = `public/images/${hostel.image}`;
             if (fs.existsSync(imagePath)) {
                 const image = fs.readFileSync(imagePath);
@@ -226,6 +205,23 @@ exports.getAllHostels = async (req, res, next) => {
 
 }
 
+exports.getTopHostels = async (req, res, next) => {
+    try {
+        const hostels = await Hostel.find().limit(5);//testing
+        if (!hostels) {
+            const error = new Error("No hostel found!");
+            error.statusCode = 404;
+            throw error;
+        }
+        res.status(201).json({ message: "Hostels found!", hostels: hostels })
+    } catch (error) {
+        if (!error.statusCode) {
+            error.statusCode = 500;
+        }
+        next(error);
+    }
+}
+
 exports.getHostelsWithCity = async (req, res, next) => {
     const city = req.query.city;
     if (!city) {
@@ -233,27 +229,15 @@ exports.getHostelsWithCity = async (req, res, next) => {
         error.statusCode = 403;
         throw error;
     }
-
     try {
         const hostels = await Hostel.find({ city: city });
-        if (!hostels) {
-            const error = new Error("No hostel found!");
-            error.statusCode = 404;
-            throw error;
-        }
-        let images = [];
-
-        hostels.map(hostel => {
-            console.log(hostel.image);
-            const imagePath = `public/images/${hostel.image}`;
-            if (fs.existsSync(imagePath)) {
-                const image = fs.readFileSync(imagePath);
-                const base64Image = Buffer.from(image).toString('base64');
-                images.push(base64Image);
-            }
-        })
-
-        res.status(201).json({ message: "Hostels found!", hostels: hostels, images: images })
+        console.log(hostels);
+        // if (hostels.length === 0) {
+        //     const error = new Error("No hostel found!");
+        //     error.statusCode = 404;
+        //     throw error;
+        // }
+        res.status(201).json({ message: "Hostels found!", hostels: hostels })
     } catch (error) {
         if (!error.statusCode) {
             error.statusCode = 500;
@@ -296,11 +280,12 @@ exports.getHostelsWithFilter = async (req, res, next) => {
     }
 
     try {
-        const hostels = await Hostel.find({ 
-            city: city, 
-            roomSize: roomSize, 
-            facilities: facilities, 
-            bedsInRoom: beds, 
+        console.log(city+roomSize+facilities+beds+university);
+        const hostels = await Hostel.find({
+            city: city,
+            roomSize: roomSize,
+            facilities: facilities,
+            bedsInRoom: beds,
             university: university
         });
         if (!hostels) {
@@ -308,19 +293,7 @@ exports.getHostelsWithFilter = async (req, res, next) => {
             error.statusCode = 404;
             throw error;
         }
-        let images = [];
-
-        hostels.map(hostel => {
-            console.log(hostel.image);
-            const imagePath = `public/images/${hostel.image}`;
-            if (fs.existsSync(imagePath)) {
-                const image = fs.readFileSync(imagePath);
-                const base64Image = Buffer.from(image).toString('base64');
-                images.push(base64Image);
-            }
-        })
-
-        res.status(200).json({ message: "Hostels found!", hostels: hostels, images: images })
+        res.status(200).json({ message: "Hostels found!", hostels: hostels })
     } catch (error) {
         if (!error.statusCode) {
             error.statusCode = 500;
@@ -329,9 +302,8 @@ exports.getHostelsWithFilter = async (req, res, next) => {
     }
 }
 
-exports.getHostel = async(req, res, next) => {
+exports.getHostel = async (req, res, next) => {
     const hostelId = req.params.hostelId;
-
     try {
         const hostel = await Hostel.findOne({ _id: hostelId });
         if (!hostel) {
@@ -339,14 +311,7 @@ exports.getHostel = async(req, res, next) => {
             error.statusCode = 404;
             throw error;
         }
-        const imagePath = `public/images/${hostel.image}`;
-        let image;
-        if (fs.existsSync(imagePath)) {
-            const Image = fs.readFileSync(imagePath);
-            const base64Image = Buffer.from(Image).toString('base64');
-            image = base64Image;
-        }
-        res.status(201).json({ message: "Hostel found!", hostel: hostel, image: image })
+        res.status(201).json({ message: "Hostel found!", hostel: hostel })
     } catch (error) {
         if (!error.statusCode) {
             error.statusCode = 500;

@@ -6,11 +6,11 @@ const hostelRoutes = require("./routes/hostel");
 require("dotenv").config();
 
 const MONGO_URI =
-    `mongodb+srv://${process.env.DB_NAME}:${process.env.DB_PASSWORD}@fyp-cluter.qauvmhw.mongodb.net/HostelManagementApp?retryWrites=true&w=majority`;
-
+    // `mongodb+srv://${process.env.DB_NAME}:${process.env.DB_PASSWORD}@fyp-cluter.qauvmhw.mongodb.net/HostelManagementApp?retryWrites=true&w=majority`;
+"mongodb://127.0.0.1:27017/HostelManagementApp";
 const app = express();
 
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '7mb' }));
 
 app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
