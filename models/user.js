@@ -15,6 +15,10 @@ const userSchema = Schema({
         type: String,
         required: true
     },
+    contact: {
+        type: Number,
+        required: true
+    },
     role: {
         type: String,
         required: false

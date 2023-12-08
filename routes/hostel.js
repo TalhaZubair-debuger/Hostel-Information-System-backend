@@ -109,7 +109,11 @@ router.get("/hostels-with-filter", isAuth, hostelController.getHostelsWithFilter
 
 router.get('/hostel-user/:hostelId', isAuth, hostelController.getHostel);
 
-router.post("/favorites/add-to-favorite", isAuth);
+router.post("/favorites/add-to-favorite/:hostelId", isAuth, hostelController.addToFavorites);
+
+router.delete("/favorites/remove-from-favorite/:hostelId", isAuth, hostelController.removeFromFavorites);
+
+router.get('/favorites/get-favorite-hostels', isAuth, hostelController.getFavoriteHostels);
 
 
 module.exports = router;

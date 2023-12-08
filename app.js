@@ -3,11 +3,14 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const userRoutes = require("./routes/user");
 const hostelRoutes = require("./routes/hostel");
+const bedRecordsRoutes = require("./routes/bedRecords");
+const chatRoutes = require("./routes/chats");
+
 require("dotenv").config();
 
 const MONGO_URI =
     // `mongodb+srv://${process.env.DB_NAME}:${process.env.DB_PASSWORD}@fyp-cluter.qauvmhw.mongodb.net/HostelManagementApp?retryWrites=true&w=majority`;
-"mongodb://127.0.0.1:27017/HostelManagementApp";
+    "mongodb://127.0.0.1:27017/HostelManagementApp";
 const app = express();
 
 app.use(bodyParser.json({ limit: '7mb' }));
@@ -21,6 +24,9 @@ app.use((req, res, next) => {
 
 app.use("/users", userRoutes);
 app.use("/hostels", hostelRoutes);
+app.use("/hostel-beds", bedRecordsRoutes);
+app.use("/chats", chatRoutes);
+
 
 mongoose.connect(MONGO_URI)
     .then(() => {

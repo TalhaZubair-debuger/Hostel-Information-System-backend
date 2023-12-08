@@ -1,7 +1,7 @@
 const Hostel = require("../models/hostel.js");
-const { validationResult } = require("express-validator");
-const jwt = require("jsonwebtoken");
+const { validationResult, check } = require("express-validator");
 const fs = require("fs");
+const User = require("../models/user.js");
 
 //Owner Hostel APIs
 exports.addHostel = async (req, res, next) => {
@@ -25,6 +25,8 @@ exports.addHostel = async (req, res, next) => {
     const city = req.body.city;
     const university = req.body.university;
     const owner = req.userId;
+    const privateKey = req.body.privateKey;
+    const publishableKey = req.body.publishableKey;
 
     try {
         const hostel = new Hostel({
@@ -39,7 +41,9 @@ exports.addHostel = async (req, res, next) => {
             facilities,
             city,
             university,
-            owner
+            owner,
+            privateKey,
+            publishableKey
         })
         await hostel.save();
         res.status(201).json({ message: "Hostel added successfully!", hostel: hostel });//testing
@@ -184,18 +188,8 @@ exports.getAllHostels = async (req, res, next) => {
             error.statusCode = 404;
             throw error;
         }
-        let images = [];
 
-        hostels.map(hostel => {
-            const imagePath = `public/images/${hostel.image}`;
-            if (fs.existsSync(imagePath)) {
-                const image = fs.readFileSync(imagePath);
-                const base64Image = Buffer.from(image).toString('base64');
-                images.push(base64Image);
-            }
-        })
-
-        res.status(201).json({ message: "Hostels found!", hostels: hostels, images: images })
+        res.status(201).json({ message: "Hostels found!", hostels: hostels })
     } catch (error) {
         if (!error.statusCode) {
             error.statusCode = 500;
@@ -231,12 +225,10 @@ exports.getHostelsWithCity = async (req, res, next) => {
     }
     try {
         const hostels = await Hostel.find({ city: city });
-        console.log(hostels);
-        // if (hostels.length === 0) {
-        //     const error = new Error("No hostel found!");
-        //     error.statusCode = 404;
-        //     throw error;
-        // }
+        if (hostels.length === 0) {
+            res.status(201).json({ message: "No Hostels found!" })
+            return;
+        }
         res.status(201).json({ message: "Hostels found!", hostels: hostels })
     } catch (error) {
         if (!error.statusCode) {
@@ -280,7 +272,7 @@ exports.getHostelsWithFilter = async (req, res, next) => {
     }
 
     try {
-        console.log(city+roomSize+facilities+beds+university);
+        console.log(city + roomSize + facilities + beds + university);
         const hostels = await Hostel.find({
             city: city,
             roomSize: roomSize,
@@ -312,6 +304,80 @@ exports.getHostel = async (req, res, next) => {
             throw error;
         }
         res.status(201).json({ message: "Hostel found!", hostel: hostel })
+    } catch (error) {
+        if (!error.statusCode) {
+            error.statusCode = 500;
+        }
+        next(error);
+    }
+}
+
+exports.addToFavorites = async (req, res, next) => {
+    const user = req.userId;
+    const hostelId = req.params.hostelId;
+
+    try {
+        const checkUser = await User.findById(user);
+        if (!checkUser) {
+            const error = new Error("No authorized user found!");
+            error.statusCode = 409;
+            throw error;
+        }
+        checkUser.favorites.push(hostelId);
+        await checkUser.save()
+        res.status(200).json({ message: "Hostel added to favorites!" });
+    } catch (error) {
+        if (!error.statusCode) {
+            error.statusCode = 500;
+        }
+        next(error);
+    }
+}
+
+exports.removeFromFavorites = async (req, res, next) => {
+    const user = req.userId;
+    const hostelId = req.params.hostelId;
+
+    try {
+        const checkUser = await User.findById(user);
+        if (!checkUser) {
+            const error = new Error("No authorized user found!");
+            error.statusCode = 409;
+            throw error;
+        }
+        checkUser.favorites.pop(hostelId);
+        await checkUser.save()
+        res.status(200).json({ message: "Hostel removed from favorites!" });
+    } catch (error) {
+        if (!error.statusCode) {
+            error.statusCode = 500;
+        }
+        next(error);
+    }
+}
+
+exports.getFavoriteHostels = async (req, res, next) => {
+
+    try {
+        const user = await User.findById(req.userId);
+        if (!user.favorites) {
+            const error = new Error("User does not have any favorites!");
+            error.statusCode = 409;
+            throw error;
+        }
+        let hostels = [];
+        for (let i = 0; i < user.favorites.length; i++) {
+            const response = await Hostel.findById(user.favorites[i])
+            if (response) {
+                hostels.push(response);
+            }
+        }
+        if (hostels.length === 0) {
+            res.status(200).json({ message: "No hostels in favorites" });
+        }
+        else {
+            res.status(200).json({ message: "Favorite hostels found!", hostels: hostels });
+        }
     } catch (error) {
         if (!error.statusCode) {
             error.statusCode = 500;

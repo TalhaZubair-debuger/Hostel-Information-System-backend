@@ -2,6 +2,7 @@ const express = require("express");
 const userController = require("../controllers/user");
 const { body } = require("express-validator")
 const User = require("../models/user");
+const isAuth = require("../middlewares/is-auth");
 const router = express.Router();
 
 router.put("/signup", [
@@ -39,7 +40,7 @@ router.post("/login-owner", [
         .isLength({ min: 5 }),
 ], userController.loginOwner);
 
-router.post("/login-user",  [
+router.post("/login-user", [
     body("email")
         .isEmail()
         .withMessage("Enter a valid email")
@@ -48,5 +49,13 @@ router.post("/login-user",  [
         .trim()
         .isLength({ min: 5 }),
 ], userController.loginUser);
+
+router.get("/get-user-favorites", isAuth, userController.getUserFavorites);
+
+router.get("/get-user", isAuth, userController.getUser);
+
+router.get("/get-hostel-owner-user/:ownerId", isAuth, userController.getHostelOwnerIdUserId);
+
+router.post("/get-otp" );
 
 module.exports = router;

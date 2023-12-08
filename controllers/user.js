@@ -15,6 +15,7 @@ exports.signup = async (req, res, next) => {
     const email = req.body.email;
     const name = req.body.name;
     const password = req.body.password;
+    const contact = req.body.contact;
     const confirmPassword = req.body.confirmPassword;
 
     if (password !== confirmPassword) {
@@ -28,6 +29,7 @@ exports.signup = async (req, res, next) => {
         const user = new User({
             email,
             name,
+            contact,
             password: hashedPassword
         })
         const result = await user.save();
@@ -40,7 +42,7 @@ exports.signup = async (req, res, next) => {
     }
 }
 
-exports.loginOwner = async(req, res, next) => {
+exports.loginOwner = async (req, res, next) => {
     const email = req.body.email;
     const password = req.body.password;
     let loadedUser;
@@ -68,14 +70,14 @@ exports.loginOwner = async(req, res, next) => {
         )
         res.status(200).json({ tokenOwner: token, userId: loadedUser._id.toString() })
     } catch (error) {
-        if (!error.statusCode){
+        if (!error.statusCode) {
             error.statusCode = 500;
         }
         next(error);
     }
 }
 
-exports.loginUser = async(req, res, next) => {
+exports.loginUser = async (req, res, next) => {
     const email = req.body.email;
     const password = req.body.password;
     let loadedUser;
@@ -103,9 +105,64 @@ exports.loginUser = async(req, res, next) => {
         )
         res.status(200).json({ token: token, userId: loadedUser._id.toString() })
     } catch (error) {
-        if (!error.statusCode){
+        if (!error.statusCode) {
             error.statusCode = 500;
         }
         next(error);
-    }   
+    }
 }
+
+exports.getUserFavorites = async (req, res, next) => {
+    const user = req.userId;
+    try {
+        const userResponse = await User.findById(user);
+        if (!userResponse) {
+            const error = new Error("User is not authorized!");
+            error.statusCode = 409;
+            throw error;
+        }
+        res.status(200).json({ favorites: userResponse.favorites });
+    } catch (error) {
+        if (!error.statusCode) {
+            error.statusCode = 500;
+        }
+        next(error);
+    }
+}
+
+exports.getUser = async (req, res, next) => {
+    const user = req.userId;
+    try {
+        const userResponse = await User.findById(user);
+        if (!userResponse) {
+            const error = new Error("User not Authenticated!");
+            error.statusCode = 401;
+            throw error;
+        }
+        res.status(200).json({ user: userResponse });
+    } catch (error) {
+        if (!error.statusCode) {
+            error.statusCode = 500;
+        }
+        next(error);
+    }
+}
+
+exports.getHostelOwnerIdUserId = async (req, res, next) => {
+    const ownerId = req.params.ownerId;
+    try {
+        const userResponse = await User.findById(ownerId);
+        if (!userResponse) {
+            const error = new Error("User not found!");
+            error.statusCode = 401;
+            throw error;
+        }
+        res.status(200).json({ ownerId: userResponse._id, userId: req.userId });
+    } catch (error) {
+        if (!error.statusCode) {
+            error.statusCode = 500;
+        }
+        next(error);
+    }
+}
+

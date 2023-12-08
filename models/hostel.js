@@ -47,6 +47,14 @@ const hostelSchema = Schema({
         type: String,
         required: true
     },
+    publishableKey: {
+        type: String,
+        required: true
+    },
+    privateKey: {
+        type: String,
+        required: true
+    },
     owner: {
         type: Schema.Types.ObjectId,
         ref: "User",
