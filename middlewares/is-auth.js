@@ -28,10 +28,10 @@ module.exports = (req, res, next) => {
     }
 
     if (!decodedToken) {
-        const error = new Error("Not authenticated!");
-        error.statusCode = 500;
-        throw error;
+        res.status(422).json({message: "Not Authenticated!"});
     }
-    req.userId = decodedToken.userId;
+    else {
+        req.userId = decodedToken.userId;
+    }
     next();
 }

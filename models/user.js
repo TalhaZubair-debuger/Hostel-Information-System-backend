@@ -3,6 +3,10 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const userSchema = Schema({
+    image: {
+        type: String,
+        required: false
+    },
     email: {
         type: String,
         required: true

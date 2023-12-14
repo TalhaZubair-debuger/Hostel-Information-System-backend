@@ -55,6 +55,10 @@ const hostelSchema = Schema({
         type: String,
         required: true
     },
+    reviews: {
+        type: Array,
+        required: false
+    },
     owner: {
         type: Schema.Types.ObjectId,
         ref: "User",

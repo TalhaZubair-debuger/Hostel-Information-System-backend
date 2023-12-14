@@ -2,6 +2,7 @@ const Hostel = require("../models/hostel.js");
 const { validationResult, check } = require("express-validator");
 const fs = require("fs");
 const User = require("../models/user.js");
+const BedRecords = require("../models/bedRecords.js");
 
 //Owner Hostel APIs
 exports.addHostel = async (req, res, next) => {
@@ -75,7 +76,7 @@ exports.getOwnerHostels = async (req, res, next) => {
 }
 
 exports.getOwnerHostel = async (req, res, next) => {
-    const owner = req.userId;//testing
+    const owner = req.userId;
     const hostelId = req.params.hostelId;
 
     try {
@@ -87,7 +88,10 @@ exports.getOwnerHostel = async (req, res, next) => {
         }
         res.status(201).json({ message: "Hostel found!", hostel: hostel })
     } catch (error) {
-
+        if (!error.statusCode) {
+            error.statusCode = 500;
+        }
+        next(error);
     }
 }
 
@@ -144,35 +148,29 @@ exports.updateHostel = async (req, res, next) => {
 
 exports.deleteHostel = async (req, res, next) => {
     const hostelId = req.params.hostelId;
-    const owner = req.body.userId;//testing
-    if (!owner) {
-        const error = new Error("User Not Found!");
-        error.statusCode = 404;
-        throw error;
-    }
 
     try {
-        const hostel = await Hostel.findOne({ owner, _id: hostelId });
+        const hostel = await Hostel.findById(hostelId);
         if (!hostel) {
             const error = new Error("No hostel found!");
             error.statusCode = 404;
             throw error;
         }
 
-        const image = hostel.image;
-        fs.unlink(`public/images/${image}`, (err) => {
-            if (err) {
-                console.log("Error while deleting the image: ", err)
+        const bedRecords = await BedRecords.find({ hostelId });
+        if (bedRecords) {
+            for (let i = 0; i < bedRecords.length; i++) {
+                await BedRecords.findOneAndDelete({ hostelId });
             }
-            else {
-                console.log("Image deleted successfully!");
-            }
-        })
+        }
 
-        await Hostel.findOneAndDelete({ owner, _id: hostelId });
+        await Hostel.findOneAndDelete({ _id: hostelId });
         res.status(201).json({ message: "Hostel deleted!" })
     } catch (error) {
-
+        if (!error.statusCode) {
+            error.statusCode = 500;
+        }
+        next(error);
     }
 
 
@@ -378,6 +376,36 @@ exports.getFavoriteHostels = async (req, res, next) => {
         else {
             res.status(200).json({ message: "Favorite hostels found!", hostels: hostels });
         }
+    } catch (error) {
+        if (!error.statusCode) {
+            error.statusCode = 500;
+        }
+        next(error);
+    }
+}
+
+exports.postAddReview = async (req, res, next) => {
+    const hostelId = req.params.hostelId;
+    const feedback = req.body.feedback;
+    const rating = req.body.rating;
+    const userId = req.userId;
+
+    try {
+        const hostel = await Hostel.findById(hostelId);
+        if (!hostel) {
+            res.status(404).json({ message: "No hostel found!" });
+        }
+        const user = await User.findById(userId);
+
+        hostel.reviews.push({
+            feedback,
+            rating,
+            user: userId,
+            name: user.name
+        })
+
+        await hostel.save();
+        res.status(200).json({ message: "Review added!" });
     } catch (error) {
         if (!error.statusCode) {
             error.statusCode = 500;

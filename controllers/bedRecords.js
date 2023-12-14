@@ -19,7 +19,7 @@ exports.getBedRecords = async (req, res, next) => {
                 }
             }
             const bedRecordsFinal = await BedRecords.find({ hostelId });
-            res.status(200).json({ Beds: bedRecordsFinal });
+            res.status(200).json({ Beds: bedRecordsFinal, ownerId: req.userId });
         }
         else {
             const hostel = await Hostel.findById(hostelId);
@@ -42,7 +42,7 @@ exports.getBedRecords = async (req, res, next) => {
                         await newBedRecords.save();
                     }
                     const bedRecordsFinal = await BedRecords.find({ hostelId });
-                    res.status(200).json({ message: "Beds records created and saved!", Beds: bedRecordsFinal });
+                    res.status(200).json({ message: "Beds records created and saved!", Beds: bedRecordsFinal, ownerId: req.userId });
                 }
                 else {
                     res.status(200).json({ message: "Total beds and Occupied + Vacant beds doesnt match" });
@@ -95,15 +95,13 @@ exports.postMakePaymentRequest = async (req, res, next) => {
     const amount = req.body.amount;
     const hostelId = req.params.hostelId;
     try {
-        const bed = await BedRecords.findOne({ hostelId: hostelId, occupied: false });
+        const bed = await BedRecords.findOne({ hostelId: hostelId, occupied: false, preOccupied: false });
         if (!bed) {
-            const error = new Error("No vacant bed found! (Your payment cannot process)");
-            error.statusCode = 404;
-            throw error;
+            res.status(404).json({ message: "No vacant beds found!" });
         }
+        const hostel = await Hostel.findById(hostelId);
         //Payment Gateway
-        const stripe = require('stripe')
-            ('sk_test_51KTWMFEVHmVDTnUL9CpuJIJfm1WeopeLvSvbOmzZPo6mjoTGhjMvvVCiXvenP6Nko7yjPRJl25gTJRPCX2ZNnRA200SvOjgsqb');
+        const stripe = require('stripe')(hostel.privateKey);
 
         const paymentIntent = await stripe.paymentIntents.create({
             amount: amount,
@@ -114,6 +112,52 @@ exports.postMakePaymentRequest = async (req, res, next) => {
         });
 
         res.json({ paymentIntent: paymentIntent.client_secret });
+    } catch (error) {
+        if (!error.statusCode) {
+            error.statusCode = 500;
+        }
+        next(error);
+    }
+}
+
+exports.postMakeOfflinePayment = async (req, res, next) => {
+    const hostelId = req.params.hostelId;
+    const currentDate = new Date();
+    const dueDate = new Date(currentDate.getFullYear(),
+        currentDate.getMonth() + 1,
+        currentDate.getDate());
+    const formattedDueDate = dueDate.toLocaleDateString("en-US");
+
+    try {
+        const hostel = await Hostel.findById(hostelId);
+        if (!hostel) {
+            const error = new Error("Hostel not found");
+            error.statusCode = 404;
+            throw error;
+        }
+        const bed = await BedRecords.findOne({ hostelId: hostelId, occupied: false, preOccupied: false });
+        if (!bed) {
+            res.status(404).json({ message: "No vacant beds found!" });
+        }
+
+        const user = await User.findById(req.userId);
+
+        bed.hosteliteName = user.name;
+        bed.contact = user.contact;
+        bed.rentAmont = hostel.rent;
+        bed.dueDate = formattedDueDate;
+        bed.previousDues = "Cleared";
+        bed.occupied = true;
+        bed.occupantId = req.userId;
+        bed.offlinePaymentSent = true;
+        bed.offlinePaymentRecieved = false;
+
+        const bedResponse = await bed.save();
+        if (bedResponse) {
+            res.status(200).json({ message: "Bed Offline payment successful! You will be able to see your bed in 'Your Hostels' once hostel owner approves it." });
+        } else {
+            res.status(400).json({ message: "Unkown error occured!" });
+        }
     } catch (error) {
         if (!error.statusCode) {
             error.statusCode = 500;
@@ -235,6 +279,54 @@ exports.patchUpdateDues = async (req, res, next) => {
         await bed.save();
 
         res.status(200).json({ message: "Bed Dues Updated!" });
+    } catch (error) {
+        if (!error.statusCode) {
+            error.statusCode = 500;
+        }
+        next(error);
+    }
+}
+
+
+exports.EditBedInfo = async (req, res, next) => {
+    const bedId = req.params.bedId;
+    const name = req.body.name;
+    const contact = req.body.contact;
+    const rent = req.body.rent;
+
+    try {
+        const bed = await BedRecords.findById(bedId);
+        if (!bed) {
+            res.status(404).json({ message: "Could not found the requested bed." });
+            return;
+        }
+        bed.hosteliteName = name;
+        bed.contact = contact;
+        if (rent) {
+            bed.rentAmont = rent;
+        }
+
+        await bed.save();
+        res.status(200).json({ message: "Bed Info Updated!" });
+    } catch (error) {
+        if (!error.statusCode) {
+            error.statusCode = 500;
+        }
+        next(error);
+    }
+}
+
+exports.pathVerifyOfflinePayment = async (req, res, next) => {
+    const bedId = req.params.bedId;
+
+    try {
+        const bed = await BedRecords.findById(bedId);
+        if (!bed) {
+            res.status(500).json({ message: "Error fetching bed details" })
+        }
+        bed.offlinePaymentRecieved = true;
+        await bed.save();
+        res.status(200).json({ message: "Payment Verified and bed allocated!" });
     } catch (error) {
         if (!error.statusCode) {
             error.statusCode = 500;

@@ -115,5 +115,7 @@ router.delete("/favorites/remove-from-favorite/:hostelId", isAuth, hostelControl
 
 router.get('/favorites/get-favorite-hostels', isAuth, hostelController.getFavoriteHostels);
 
+router.post("/add-review/:hostelId", isAuth, hostelController.postAddReview);
+
 
 module.exports = router;

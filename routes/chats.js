@@ -7,10 +7,10 @@ const router = express.Router();
 
 router.post("/add-message", isAuth, chatsController.postAddMessage);
 
-router.get("/get-messages/:ownerId", isAuth, chatsController.getMessages);
+router.get("/get-messages", isAuth, chatsController.getMessages);
 
-router.get("/get-all-messages", isAuth);
+router.post("/get-new-messages", isAuth, chatsController.getNewMessages);
 
-router.post("/get-new-messages/:ownerId", isAuth, chatsController.getNewMessages);
+router.get("/get-all-messages", isAuth, chatsController.getAllMessages);
 
 module.exports = router

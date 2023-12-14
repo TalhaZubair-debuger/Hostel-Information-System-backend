@@ -2,16 +2,6 @@ const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 
-const Beds = Schema({
-    hosteliteName: String,
-    contact: String,
-    rentAmont: Number,
-    dueDate: String,
-    previousDues: String,
-    preOccupied: Boolean,
-    occupied: Boolean
-})
-
 const bedRecordSchema = Schema({
     hostelId: {
         type: Schema.Types.ObjectId,
@@ -45,6 +35,14 @@ const bedRecordSchema = Schema({
     occupied: {
         type: Boolean,
         required: true
+    },
+    offlinePaymentSent: {
+        type: Boolean,
+        required: false
+    },
+    offlinePaymentRecieved: {
+        type: Boolean,
+        required: false
     },
     occupantId: {
         type: Schema.Types.ObjectId,

@@ -16,8 +16,7 @@ router.put("/signup", [
                         return Promise.reject("Email already exists!")
                     }
                 })
-        })
-        .normalizeEmail(),
+        }),
     body("name")
         .trim()
         .not()
@@ -33,8 +32,7 @@ router.put("/signup", [
 router.post("/login-owner", [
     body("email")
         .isEmail()
-        .withMessage("Enter a valid email")
-        .normalizeEmail(),
+        .withMessage("Enter a valid email"),
     body("password")
         .trim()
         .isLength({ min: 5 }),
@@ -54,8 +52,13 @@ router.get("/get-user-favorites", isAuth, userController.getUserFavorites);
 
 router.get("/get-user", isAuth, userController.getUser);
 
+router.get("/get-user/:userId", isAuth, userController.getUserById);
+
 router.get("/get-hostel-owner-user/:ownerId", isAuth, userController.getHostelOwnerIdUserId);
 
-router.post("/get-otp" );
+router.post("/generate-otp", userController.generateOtpForPasswordReset);
 
+router.patch("/update-password", userController.updatePassword);
+
+router.patch("/update-user", isAuth, userController.patchUpdateUser);
 module.exports = router;

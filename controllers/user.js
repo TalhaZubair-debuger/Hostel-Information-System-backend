@@ -2,6 +2,7 @@ const User = require("../models/user.js");
 const bcrypt = require("bcryptjs");
 const { validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
+const utilityFunctions = require("../utils/utilityFunctions.js");
 
 exports.signup = async (req, res, next) => {
     const errors = validationResult(req);
@@ -148,6 +149,23 @@ exports.getUser = async (req, res, next) => {
     }
 }
 
+exports.getUserById = async (req, res, next) => {
+    const user = req.params.userId;
+    try {
+        const userResponse = await User.findById(user);
+        if (!userResponse) {
+            const error = new Error("User not Found!");
+            error.statusCode = 404;
+            throw error;
+        }
+        res.status(200).json({ user: userResponse });
+    } catch (error) {
+        if (!error.statusCode) {
+            error.statusCode = 500;
+        }
+        next(error);
+    }
+}
 exports.getHostelOwnerIdUserId = async (req, res, next) => {
     const ownerId = req.params.ownerId;
     try {
@@ -166,3 +184,77 @@ exports.getHostelOwnerIdUserId = async (req, res, next) => {
     }
 }
 
+exports.generateOtpForPasswordReset = async (req, res, next) => {
+    const email = req.body.email;
+
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            res.status(404).json({ message: "User doesn't exist!" });
+        }
+        else {
+            const otp = utilityFunctions.generateOTP();
+
+            await utilityFunctions.sendEmail(email, otp);
+            res.status(200).json({ message: "Email sent!", otp });
+        }
+    } catch (error) {
+        if (!error.statusCode) {
+            error.statusCode = 500;
+        }
+        next(error);
+    }
+}
+
+exports.updatePassword = async (req, res, next) => {
+    const email = req.body.email;
+    const password = req.body.password;
+
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            const error = new Error("Error finding user!");
+            error.statusCode = 404;
+            throw error;
+        }
+        const hashedPassword = await bcrypt.hash(password, 12);
+        user.password = hashedPassword;
+        await user.save();
+        res.status(200).json({message: "Password Updated!"});
+    } catch (error) {
+        if (!error.statusCode) {
+            error.statusCode = 500;
+        }
+        next(error);
+    }
+}
+
+exports.patchUpdateUser = async (req, res, next) => {
+    const userId = req.userId;
+    const name = req.body.name;
+    const email = req.body.email;
+    const contact = req.body.contact;
+    const image = req.body.image;
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            const error = new Error("Error finding user!");
+            error.statusCode = 404;
+            throw error;
+        }
+
+        user.name = name;
+        user.email = email;
+        user.contact = contact;
+        if (image != null){
+            user.image = image;
+        }
+        await user.save();
+        res.status(201).json({message: "User Data updated!"});
+    } catch (error) {
+        if (!error.statusCode) {
+            error.statusCode = 500;
+        }
+        next(error);
+    }
+}
