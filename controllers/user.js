@@ -19,6 +19,12 @@ exports.signup = async (req, res, next) => {
     const contact = req.body.contact;
     const confirmPassword = req.body.confirmPassword;
 
+    const checkExistingUser = await User.findOne({email});
+    if (checkExistingUser) {
+        res.status(409).json({message: "Email Already exists"});
+        return;
+    }
+
     if (password !== confirmPassword) {
         const error = new Error("Password didn't match!");
         error.statusCode = 401;
@@ -190,7 +196,7 @@ exports.generateOtpForPasswordReset = async (req, res, next) => {
     try {
         const user = await User.findOne({ email });
         if (!user) {
-            res.status(404).json({ message: "User doesn't exist!" });
+            res.status(404).json({ message: "Email doesn't exist!" });
         }
         else {
             const otp = utilityFunctions.generateOTP();

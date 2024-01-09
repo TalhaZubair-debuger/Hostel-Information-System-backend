@@ -8,15 +8,7 @@ const router = express.Router();
 router.put("/signup", [
     body("email")
         .isEmail()
-        .withMessage("Enter a valid email")
-        .custom((value, { req }) => {
-            return User.findOne({ email: value })
-                .then(userDoc => {
-                    if (userDoc) {
-                        return Promise.reject("Email already exists!")
-                    }
-                })
-        }),
+        .withMessage("Enter a valid email"),
     body("name")
         .trim()
         .not()
