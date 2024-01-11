@@ -62,9 +62,8 @@ exports.getBedRecords = async (req, res, next) => {
 exports.addPreOccupiedBedInfo = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        const error = new Error("Validation Failed, data entered in wrong format.");
-        error.statusCode = 422;
-        throw error;
+        res.status(422).json({message: "Validation Failed, data entered in wrong format."})
+        return;
     }
 
     const hosteliteName = req.body.name;
@@ -74,9 +73,8 @@ exports.addPreOccupiedBedInfo = async (req, res, next) => {
     try {
         const bedRecord = await BedRecords.findById(bedId);
         if (!bedRecord) {
-            const error = new Error("Could not find the Bed.");
-            error.statusCode = 404;
-            throw error;
+            res.status(404).json({message: "Bed not found!"})
+        return;
         }
         bedRecord.hosteliteName = hosteliteName;
         bedRecord.contact = contact;
@@ -98,6 +96,7 @@ exports.postMakePaymentRequest = async (req, res, next) => {
         const bed = await BedRecords.findOne({ hostelId: hostelId, occupied: false, preOccupied: false });
         if (!bed) {
             res.status(404).json({ message: "No vacant beds found!" });
+            return;
         }
         const hostel = await Hostel.findById(hostelId);
         //Payment Gateway
@@ -131,13 +130,13 @@ exports.postMakeOfflinePayment = async (req, res, next) => {
     try {
         const hostel = await Hostel.findById(hostelId);
         if (!hostel) {
-            const error = new Error("Hostel not found");
-            error.statusCode = 404;
-            throw error;
+            res.status(404).json({message: "Hostel not found!"})
+        return;
         }
         const bed = await BedRecords.findOne({ hostelId: hostelId, occupied: false, preOccupied: false });
         if (!bed) {
             res.status(404).json({ message: "No vacant beds found!" });
+            return;
         }
 
         const user = await User.findById(req.userId);
@@ -177,15 +176,13 @@ exports.postBookABed = async (req, res, next) => {
     try {
         const hostel = await Hostel.findById(hostelId);
         if (!hostel) {
-            const error = new Error("Hostel not found");
-            error.statusCode = 404;
-            throw error;
+            res.status(404).json({message: "Hostel not found!"})
+        return;
         }
         const bed = await BedRecords.findOne({ hostelId: hostelId, occupied: false, preOccupied: false });
         if (!bed) {
-            const error = new Error("No vacant bed found! (Your payment will be returned shortly");
-            error.statusCode = 404;
-            throw error;
+            res.status(404).json({message: "No vacant bed found! (Your payment will be returned shortly"})
+        return;
         }
         const user = await User.findById(req.userId);
 

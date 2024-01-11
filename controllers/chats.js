@@ -47,7 +47,6 @@ exports.getMessages = async (req, res, next) => {
     try {
         const messages = await Chats.findOne({ userId, ownerId });
         if (!messages) {
-            console.log("Damn it!");
             res.status(404).json({ message: "No messages found!" });
         }
         else {
@@ -69,34 +68,14 @@ exports.getNewMessages = async (req, res, next) => {
     try {
         const messages = await Chats.findOne({ userId, ownerId });
         if (!messages) {
-            const error = new Error("Error getting messages");
-            throw error;
+            res.status(500).json({message: "Error getting messages!"})
+            return;
         }
         if (messages.messages.length !== chatLength) {
             res.status(200).json({ messages: messages, current: req.userId });
         } else {
             res.status(200).json({ message: "No new messsage!" });
         }
-    } catch (error) {
-        if (!error.statusCode) {
-            error.statusCode = 500;
-        }
-        next(error);
-    }
-}
-
-exports.getMessages = async (req, res, next) => {
-    const userId = req.userId;
-
-    try {
-        const messages = await Chats.findOne({ userId });
-        if (messages) {
-            res.status(200).json({ messages: messages, current: req.userId });
-        }
-        else {
-            res.status(404).json({ message: "No messages found!" });
-        }
-
     } catch (error) {
         if (!error.statusCode) {
             error.statusCode = 500;

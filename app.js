@@ -9,8 +9,8 @@ const chatRoutes = require("./routes/chats");
 require("dotenv").config();
 
 const MONGO_URI =
-    // `mongodb+srv://${process.env.DB_NAME}:${process.env.DB_PASSWORD}@fyp-cluter.qauvmhw.mongodb.net/HostelManagementApp?retryWrites=true&w=majority`;
-    "mongodb://127.0.0.1:27017/HostelManagementApp";
+    `mongodb+srv://${process.env.DB_NAME}:${process.env.DB_PASSWORD}@fyp-cluter.qauvmhw.mongodb.net/HostelManagementApp?retryWrites=true&w=majority`;
+    // "mongodb://127.0.0.1:27017/HostelManagementApp";
 const app = express();
 
 app.use(bodyParser.json({ limit: '7mb' }));

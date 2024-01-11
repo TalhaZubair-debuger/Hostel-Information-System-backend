@@ -56,16 +56,14 @@ exports.loginOwner = async (req, res, next) => {
     try {
         const user = await User.findOne({ email: email });
         if (!user) {
-            const error = new Error("A user with this Email could not be found!");
-            error.statusCode = 401;
-            throw error;
+            res.status(401).json({message: "A user with this Email could not be found!"})
+            return;
         }
         loadedUser = user;
         const isEqual = await bcrypt.compare(password, user.password);
         if (!isEqual) {
-            const error = new Error("Wrong Password!");
-            error.statusCode = 401;
-            throw error;
+            res.status(401).json({message: "Wrong Password!"});
+            return;
         }
         const token = jwt.sign(
             {
@@ -91,16 +89,14 @@ exports.loginUser = async (req, res, next) => {
     try {
         const user = await User.findOne({ email: email });
         if (!user) {
-            const error = new Error("A user with this Email could not be found!");
-            error.statusCode = 401;
-            throw error;
+            res.status(401).json({message: "A user with this Email could not be found!"})
+            return;
         }
         loadedUser = user;
         const isEqual = await bcrypt.compare(password, user.password);
         if (!isEqual) {
-            const error = new Error("Wrong Password!");
-            error.statusCode = 401;
-            throw error;
+            res.status(401).json({message: "Wrong Password!"});
+            return;
         }
         const token = jwt.sign(
             {
@@ -124,9 +120,8 @@ exports.getUserFavorites = async (req, res, next) => {
     try {
         const userResponse = await User.findById(user);
         if (!userResponse) {
-            const error = new Error("User is not authorized!");
-            error.statusCode = 409;
-            throw error;
+            res.status(409).json({message: "User is not authorized!"})
+            return;
         }
         res.status(200).json({ favorites: userResponse.favorites });
     } catch (error) {
@@ -142,9 +137,8 @@ exports.getUser = async (req, res, next) => {
     try {
         const userResponse = await User.findById(user);
         if (!userResponse) {
-            const error = new Error("User not Authenticated!");
-            error.statusCode = 401;
-            throw error;
+            res.status(409).json({message: "User is not authorized!"})
+            return;
         }
         res.status(200).json({ user: userResponse });
     } catch (error) {
@@ -160,9 +154,8 @@ exports.getUserById = async (req, res, next) => {
     try {
         const userResponse = await User.findById(user);
         if (!userResponse) {
-            const error = new Error("User not Found!");
-            error.statusCode = 404;
-            throw error;
+            res.status(409).json({message: "User not found!"})
+            return;
         }
         res.status(200).json({ user: userResponse });
     } catch (error) {
@@ -177,9 +170,8 @@ exports.getHostelOwnerIdUserId = async (req, res, next) => {
     try {
         const userResponse = await User.findById(ownerId);
         if (!userResponse) {
-            const error = new Error("User not found!");
-            error.statusCode = 401;
-            throw error;
+            res.status(409).json({message: "User not found!"})
+            return;
         }
         res.status(200).json({ ownerId: userResponse._id, userId: req.userId });
     } catch (error) {
@@ -197,6 +189,7 @@ exports.generateOtpForPasswordReset = async (req, res, next) => {
         const user = await User.findOne({ email });
         if (!user) {
             res.status(404).json({ message: "Email doesn't exist!" });
+            return;
         }
         else {
             const otp = utilityFunctions.generateOTP();
@@ -219,9 +212,8 @@ exports.updatePassword = async (req, res, next) => {
     try {
         const user = await User.findOne({ email });
         if (!user) {
-            const error = new Error("Error finding user!");
-            error.statusCode = 404;
-            throw error;
+            res.status(404).json({message: "Error finding user!"})
+            return;
         }
         const hashedPassword = await bcrypt.hash(password, 12);
         user.password = hashedPassword;
@@ -244,9 +236,8 @@ exports.patchUpdateUser = async (req, res, next) => {
     try {
         const user = await User.findById(userId);
         if (!user) {
-            const error = new Error("Error finding user!");
-            error.statusCode = 404;
-            throw error;
+            res.status(404).json({message: "Error finding user!"})
+            return;
         }
 
         user.name = name;

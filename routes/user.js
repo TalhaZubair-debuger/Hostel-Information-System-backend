@@ -8,6 +8,7 @@ const router = express.Router();
 router.put("/signup", [
     body("email")
         .isEmail()
+        .normalizeEmail()
         .withMessage("Enter a valid email"),
     body("name")
         .trim()
@@ -24,6 +25,7 @@ router.put("/signup", [
 router.post("/login-owner", [
     body("email")
         .isEmail()
+        .normalizeEmail()
         .withMessage("Enter a valid email"),
     body("password")
         .trim()

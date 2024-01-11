@@ -9,9 +9,8 @@ exports.addHostel = async (req, res, next) => {
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        const error = new Error("Validation Failed, data entered in wrong format.");
-        error.statusCode = 422;
-        throw error;
+        res.status(422).json({message: "Validation Failed, data entered in wrong format."})
+        return;
     }
 
     const image = req.body.image;
@@ -62,9 +61,8 @@ exports.getOwnerHostels = async (req, res, next) => {
     try {
         const hostels = await Hostel.find({ owner: owner });
         if (!hostels) {
-            const error = new Error("No hostel found!");
-            error.statusCode = 404;
-            throw error;
+            res.status(404).json({message: "No hostel found!"})
+            return;
         }
         res.status(201).json({ message: "Hostels found!", hostels: hostels })
     } catch (error) {
@@ -82,9 +80,8 @@ exports.getOwnerHostel = async (req, res, next) => {
     try {
         const hostel = await Hostel.findOne({ owner: owner, _id: hostelId });
         if (!hostel) {
-            const error = new Error("Couldn't find the hostel");
-            error.statusCode = 404;
-            throw error;
+            res.status(404).json({message: "No hostel found!"})
+            return;
         }
         res.status(201).json({ message: "Hostel found!", hostel: hostel })
     } catch (error) {
@@ -99,9 +96,8 @@ exports.updateHostel = async (req, res, next) => {
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        const error = new Error("Validation Failed, data entered in wrong format.");
-        error.statusCode = 422;
-        throw error;
+        res.status(422).json({message: "Validation Failed, data entered in wrong format."})
+            return;
     }
 
     const hostelId = req.params.hostelId;
@@ -121,9 +117,8 @@ exports.updateHostel = async (req, res, next) => {
     try {
         const hostel = await Hostel.findOne({ owner: owner, _id: hostelId });
         if (!hostel) {
-            const error = new Error("Couldn't find the hostel");
-            error.statusCode = 404;
-            throw error;
+            res.status(404).json({message: "No hostel found!"})
+            return;
         }
         hostel.image = image;
         hostel.description = description;
@@ -137,7 +132,7 @@ exports.updateHostel = async (req, res, next) => {
         hostel.city = city;
         hostel.university = university;
         await hostel.save();
-        res.status(201).json({ message: "Hostel updated successfully!", hostel: hostel });//testing
+        res.status(201).json({ message: "Hostel updated successfully!" });//testing
     } catch (error) {
         if (!error.statusCode) {
             error.statusCode = 500;
@@ -152,9 +147,8 @@ exports.deleteHostel = async (req, res, next) => {
     try {
         const hostel = await Hostel.findById(hostelId);
         if (!hostel) {
-            const error = new Error("No hostel found!");
-            error.statusCode = 404;
-            throw error;
+            res.status(404).json({message: "No hostel found!"})
+            return;
         }
 
         const bedRecords = await BedRecords.find({ hostelId });
@@ -182,9 +176,8 @@ exports.getAllHostels = async (req, res, next) => {
     try {
         const hostels = await Hostel.find();
         if (!hostels) {
-            const error = new Error("No hostel found!");
-            error.statusCode = 404;
-            throw error;
+            res.status(404).json({message: "No hostels found!"})
+            return;
         }
 
         res.status(201).json({ message: "Hostels found!", hostels: hostels })
@@ -201,9 +194,8 @@ exports.getTopHostels = async (req, res, next) => {
     try {
         const hostels = await Hostel.find().limit(5);//testing
         if (!hostels) {
-            const error = new Error("No hostel found!");
-            error.statusCode = 404;
-            throw error;
+            res.status(404).json({message: "No hostels found!"})
+            return;
         }
         res.status(201).json({ message: "Hostels found!", hostels: hostels })
     } catch (error) {
@@ -217,9 +209,8 @@ exports.getTopHostels = async (req, res, next) => {
 exports.getHostelsWithCity = async (req, res, next) => {
     const city = req.query.city;
     if (!city) {
-        const error = new Error("No city is provided!");
-        error.statusCode = 403;
-        throw error;
+        res.status(403).json({message: "No city is provided!"})
+            return;
     }
     try {
         const hostels = await Hostel.find({ city: city });
@@ -279,9 +270,8 @@ exports.getHostelsWithFilter = async (req, res, next) => {
             university: university
         });
         if (!hostels) {
-            const error = new Error("No hostel found!");
-            error.statusCode = 404;
-            throw error;
+            res.status(404).json({message: "No hostel found!"})
+            return;
         }
         res.status(200).json({ message: "Hostels found!", hostels: hostels })
     } catch (error) {
@@ -297,9 +287,8 @@ exports.getHostel = async (req, res, next) => {
     try {
         const hostel = await Hostel.findOne({ _id: hostelId });
         if (!hostel) {
-            const error = new Error("Couldn't find the hostel");
-            error.statusCode = 404;
-            throw error;
+            res.status(404).json({message: "No hostel found!"})
+            return;
         }
         res.status(201).json({ message: "Hostel found!", hostel: hostel })
     } catch (error) {
@@ -317,9 +306,8 @@ exports.addToFavorites = async (req, res, next) => {
     try {
         const checkUser = await User.findById(user);
         if (!checkUser) {
-            const error = new Error("No authorized user found!");
-            error.statusCode = 409;
-            throw error;
+            res.status(409).json({message: "No authorized user found!"})
+            return;
         }
         checkUser.favorites.push(hostelId);
         await checkUser.save()
@@ -339,9 +327,8 @@ exports.removeFromFavorites = async (req, res, next) => {
     try {
         const checkUser = await User.findById(user);
         if (!checkUser) {
-            const error = new Error("No authorized user found!");
-            error.statusCode = 409;
-            throw error;
+            res.status(409).json({message: "No authorized user found!"})
+            return;
         }
         checkUser.favorites.pop(hostelId);
         await checkUser.save()
@@ -359,9 +346,8 @@ exports.getFavoriteHostels = async (req, res, next) => {
     try {
         const user = await User.findById(req.userId);
         if (!user.favorites) {
-            const error = new Error("User does not have any favorites!");
-            error.statusCode = 409;
-            throw error;
+            res.status(409).json({message: "User does not have any favorites!"})
+            return;
         }
         let hostels = [];
         for (let i = 0; i < user.favorites.length; i++) {
@@ -372,6 +358,7 @@ exports.getFavoriteHostels = async (req, res, next) => {
         }
         if (hostels.length === 0) {
             res.status(200).json({ message: "No hostels in favorites" });
+            return;
         }
         else {
             res.status(200).json({ message: "Favorite hostels found!", hostels: hostels });
@@ -394,6 +381,7 @@ exports.postAddReview = async (req, res, next) => {
         const hostel = await Hostel.findById(hostelId);
         if (!hostel) {
             res.status(404).json({ message: "No hostel found!" });
+            return;
         }
         const user = await User.findById(userId);
 
