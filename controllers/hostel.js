@@ -9,7 +9,7 @@ exports.addHostel = async (req, res, next) => {
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        res.status(422).json({message: "Validation Failed, data entered in wrong format."})
+        res.status(422).json({ message: "Validation Failed, data entered in wrong format." })
         return;
     }
 
@@ -61,7 +61,7 @@ exports.getOwnerHostels = async (req, res, next) => {
     try {
         const hostels = await Hostel.find({ owner: owner });
         if (!hostels) {
-            res.status(404).json({message: "No hostel found!"})
+            res.status(404).json({ message: "No hostel found!" })
             return;
         }
         res.status(201).json({ message: "Hostels found!", hostels: hostels })
@@ -80,7 +80,7 @@ exports.getOwnerHostel = async (req, res, next) => {
     try {
         const hostel = await Hostel.findOne({ owner: owner, _id: hostelId });
         if (!hostel) {
-            res.status(404).json({message: "No hostel found!"})
+            res.status(404).json({ message: "No hostel found!" })
             return;
         }
         res.status(201).json({ message: "Hostel found!", hostel: hostel })
@@ -96,8 +96,8 @@ exports.updateHostel = async (req, res, next) => {
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        res.status(422).json({message: "Validation Failed, data entered in wrong format."})
-            return;
+        res.status(422).json({ message: "Validation Failed, data entered in wrong format." })
+        return;
     }
 
     const hostelId = req.params.hostelId;
@@ -117,7 +117,7 @@ exports.updateHostel = async (req, res, next) => {
     try {
         const hostel = await Hostel.findOne({ owner: owner, _id: hostelId });
         if (!hostel) {
-            res.status(404).json({message: "No hostel found!"})
+            res.status(404).json({ message: "No hostel found!" })
             return;
         }
         hostel.image = image;
@@ -147,7 +147,7 @@ exports.deleteHostel = async (req, res, next) => {
     try {
         const hostel = await Hostel.findById(hostelId);
         if (!hostel) {
-            res.status(404).json({message: "No hostel found!"})
+            res.status(404).json({ message: "No hostel found!" })
             return;
         }
 
@@ -176,7 +176,7 @@ exports.getAllHostels = async (req, res, next) => {
     try {
         const hostels = await Hostel.find();
         if (!hostels) {
-            res.status(404).json({message: "No hostels found!"})
+            res.status(404).json({ message: "No hostels found!" })
             return;
         }
 
@@ -194,7 +194,7 @@ exports.getTopHostels = async (req, res, next) => {
     try {
         const hostels = await Hostel.find().limit(5);//testing
         if (!hostels) {
-            res.status(404).json({message: "No hostels found!"})
+            res.status(404).json({ message: "No hostels found!" })
             return;
         }
         res.status(201).json({ message: "Hostels found!", hostels: hostels })
@@ -209,8 +209,8 @@ exports.getTopHostels = async (req, res, next) => {
 exports.getHostelsWithCity = async (req, res, next) => {
     const city = req.query.city;
     if (!city) {
-        res.status(403).json({message: "No city is provided!"})
-            return;
+        res.status(403).json({ message: "No city is provided!" })
+        return;
     }
     try {
         const hostels = await Hostel.find({ city: city });
@@ -235,29 +235,24 @@ exports.getHostelsWithFilter = async (req, res, next) => {
     const beds = req.query.beds;
     const university = req.query.university;
     if (!city) {
-        const error = new Error("No city is provided!");
-        error.statusCode = 403;
-        throw error;
+        res.status(403).json({ message: "No city is provided!" });
+        return;
     }
     if (!roomSize) {
-        const error = new Error("No room size is provided!");
-        error.statusCode = 403;
-        throw error;
+        res.status(403).json({ message: "No room size is provided!" });
+        return;
     }
     if (!facilities) {
-        const error = new Error("No facilities is provided!");
-        error.statusCode = 403;
-        throw error;
+        res.status(403).json({ message: "No facilities is provided!" });
+        return;
     }
     if (!beds) {
-        const error = new Error("No beds is provided!");
-        error.statusCode = 403;
-        throw error;
+        res.status(403).json({ message: "No beds is provided!" });
+        return;
     }
     if (!university) {
-        const error = new Error("No university is provided!");
-        error.statusCode = 403;
-        throw error;
+        res.status(403).json({ message: "No university is provided!" });
+        return;
     }
 
     try {
@@ -270,7 +265,7 @@ exports.getHostelsWithFilter = async (req, res, next) => {
             university: university
         });
         if (!hostels) {
-            res.status(404).json({message: "No hostel found!"})
+            res.status(404).json({ message: "No hostel found!" })
             return;
         }
         res.status(200).json({ message: "Hostels found!", hostels: hostels })
@@ -287,7 +282,7 @@ exports.getHostel = async (req, res, next) => {
     try {
         const hostel = await Hostel.findOne({ _id: hostelId });
         if (!hostel) {
-            res.status(404).json({message: "No hostel found!"})
+            res.status(404).json({ message: "No hostel found!" })
             return;
         }
         res.status(201).json({ message: "Hostel found!", hostel: hostel })
@@ -306,7 +301,7 @@ exports.addToFavorites = async (req, res, next) => {
     try {
         const checkUser = await User.findById(user);
         if (!checkUser) {
-            res.status(409).json({message: "No authorized user found!"})
+            res.status(409).json({ message: "No authorized user found!" })
             return;
         }
         checkUser.favorites.push(hostelId);
@@ -327,7 +322,7 @@ exports.removeFromFavorites = async (req, res, next) => {
     try {
         const checkUser = await User.findById(user);
         if (!checkUser) {
-            res.status(409).json({message: "No authorized user found!"})
+            res.status(409).json({ message: "No authorized user found!" })
             return;
         }
         checkUser.favorites.pop(hostelId);
@@ -346,7 +341,7 @@ exports.getFavoriteHostels = async (req, res, next) => {
     try {
         const user = await User.findById(req.userId);
         if (!user.favorites) {
-            res.status(409).json({message: "User does not have any favorites!"})
+            res.status(409).json({ message: "User does not have any favorites!" })
             return;
         }
         let hostels = [];

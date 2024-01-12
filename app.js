@@ -13,7 +13,7 @@ const MONGO_URI =
     // "mongodb://127.0.0.1:27017/HostelManagementApp";
 const app = express();
 
-app.use(bodyParser.json({ limit: '7mb' }));
+app.use(bodyParser.json({ limit: '20mb' }));
 
 app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
