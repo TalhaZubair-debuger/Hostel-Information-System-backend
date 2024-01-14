@@ -50,7 +50,12 @@ router.get("/get-user/:userId", isAuth, userController.getUserById);
 
 router.get("/get-hostel-owner-user/:ownerId", isAuth, userController.getHostelOwnerIdUserId);
 
-router.post("/generate-otp", userController.generateOtpForPasswordReset);
+router.post("/generate-otp",[
+    body("email")
+        .isEmail()
+        .withMessage("Enter a valid email")
+        .normalizeEmail()
+], userController.generateOtpForPasswordReset);
 
 router.patch("/update-password", userController.updatePassword);
 
